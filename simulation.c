@@ -23,7 +23,7 @@ void init(int dsize[2], int pcoord[2], double dat[dsize[0]][dsize[1]])
 {
     for (int yy=0; yy<dsize[0]; ++yy) {
         for (int xx=0; xx<dsize[1]; ++xx) {
-            dat[yy][xx] = 20;
+            dat[yy][xx] = 0;
         }
     }
 
@@ -193,7 +193,7 @@ int main( int argc, char* argv[] )
                  "local_v", next, PDI_OUT,
                   NULL);
 
-        for (int jj=0; jj<500; ++jj) {
+        for (int jj=0; jj<200; ++jj) {
 
             // compute the values for the next iteration
             iter(dsize, cur, next);

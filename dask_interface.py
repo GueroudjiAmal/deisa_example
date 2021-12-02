@@ -3,14 +3,13 @@ import dask
 import numpy as np
 import pandas as pd
 import dask.array as da
-from dask.distributed import Client, Event, get_client, comm, Queue, Future, Variable, fire_and_forget
+from dask.distributed import Client, Event, get_client, comm, Queue, Future, Variable
 import time
 import asyncio
 import json
 import itertools
-from dask.highlevelgraph import HighLevelGraph
-from dask.graph_manipulation import checkpoint
 from dask.delayed import Delayed
+
 class metadata:
     index = list()
     data = ""
@@ -49,13 +48,13 @@ class Bridge:
             self.arrays[ele]["timedim"] = self.arrays[ele]["timedim"][0]
             self.position = [self.arrays[ele]["starts"][i]//self.arrays[ele]["subsizes"][i] for i in range(len(np.array(self.arrays[ele]["sizes"])))]
         if rank==0:
-            Queue("Arrays").put(self.arrays) # si et seulement si on a une decomposition de domaine reguliere parfaite :p , sinon c'est tout le mode qui envoie.
+            Queue("Arrays").put(self.arrays) # If and only if I have a perfect distribution 
             
             
     def create_key(self, timestep, name):
         self.position[self.arrays[name]["timedim"]]= timestep
         position = tuple(self.position)
-        return (name, position)
+        return ("deisa-"+name, position)
 
     def publish_data(self, data, data_name, timestep):
         event = Event("Done")
@@ -65,10 +64,9 @@ class Bridge:
         shap = list(data.shape)
         new_shape = tuple(shap[:self.arrays[data_name]["timedim"]]+[1]+shap[self.arrays[data_name]["timedim"]:])
         data = data.reshape(new_shape)
-        f = self.client.scatter(data, direct = True, workers=self.workers, keys=[key])
+        f = self.client.scatter(data, direct = True, workers=self.workers, keys=[key], deisa=True)
         while (f.status != 'finished'):
-            f = self.client.scatter(data, direct = True, workers=self.workers, keys=[key])
-
+            f = self.client.scatter(data, direct = True, workers=self.workers, keys=[key], deisa=True)
             
 class CoupleDask :
     adr = ""
@@ -91,37 +89,13 @@ class CoupleDask :
         l = list(itertools.product(*[range(i) for i in chunks_in_each_dim]))
         items = []
         for m in l:
-            f=Future(key=(name,m),inform=True)
-            #fire_and_forget(f)
-            d = da.from_delayed(dask.delayed(f, name=(name,m)), shape=chunksize, dtype=dtype)
+            f=Future(key=("deisa-"+name,m), inform=True, deisa=True)
+            d = da.from_delayed(dask.delayed(f), shape=chunksize, dtype=dtype)
             items.append([list(m),d])
         ll = self.array_sort(items)
-        array = da.block(ll)
-        return array
-        """
-        darray = []
-        for l in ll:
-            d = da.block(l)
-            darray.append(d)
-        array = da.concatenate(darray)
-        or 
-        darray = []
-        i=0
-        new_shape = tuple([1]+list(shape[1:]))
-        print(new_shape, "new shape ")
-        print(chunksize, "chunksize")
-        for l in ll:
-            name = "timestep"+str(i)
-            d = da.block(l)
-            print(d, dict(d.dask))
-            layer = {name: (d.__dask_keys__())}
-            dsk = HighLevelGraph.from_collections(name, layer, dependencies=())
-            darray.append(da.from_delayed(Delayed(name, dsk), shape=new_shape, dtype=type(d)).rechunk(chunksize))
-            i= i+1
-        array = da.concatenate(darray)
-        return array
-        """
-
+        arrays = da.block(ll)
+        return arrays
+    
     def array_sort(self, ListDs):
         if len(ListDs[0][0]) == 0:
             return ListDs[0][1]
@@ -134,10 +108,12 @@ class CoupleDask :
     def get_data(self):
         self.arrays_desc = Queue("Arrays").get()
         for name in self.arrays_desc:
-            #graph = self.create_arrays_hlg(name, self.arrays_desc[name]["sizes"], self.arrays_desc[name]["subsizes"])
             self.arrays[name] = self.create_array(name,self.arrays_desc[name]["sizes"], self.arrays_desc[name]["subsizes"], self.arrays_desc[name]["dtype"], self.arrays_desc[name]["timedim"])
-        Event("Done").set() #Barrier after the creation of all the dask arrays 
+        #Barrier after the creation of all the dask arrays 
+        e = Event("Done")
+        e.set()
         return self.arrays
 
 def Initialization(Sworker, scheduler_info):
     return CoupleDask(Sworker, scheduler_info)
+
