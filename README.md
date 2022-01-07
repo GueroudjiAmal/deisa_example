@@ -1,5 +1,5 @@
 # Dask-Enabled In Situ Analytics
-An example how to use deisa 
+This repository contains an example on how deisa can be used. 
 
 ## Requirement :
 - [Deisa PDI plugin](https://github.com/GueroudjiAmal/deisa) 
