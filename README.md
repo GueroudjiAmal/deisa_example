@@ -1,4 +1,4 @@
-# deisa_example Dask-Enabled In Situ Analytics
+# Dask-Enabled In Situ Analytics
 An example how to use deisa 
 
  ## Requirement :
