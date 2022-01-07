@@ -20,5 +20,5 @@ The **_DEISA Adaptor_** uses this information to create Dask arrays, that can be
 - dask-interface.py : contains **_DEISA_** python libaray (Bridge and Adaptor classes).
 - Client.py containts an example of a python script for analytics. It it run is the Dask Client.
 - prescript.py creates a file Config.yml that contains simulation configuration such as the size of data, the number of timesteps and the domain decomposition.
-- Launcher.sh and Script.sh car be used to launch the simulation.
+- Launcher.sh and Script.sh can be used to launch the simulation and Dask cluster in [Ruche](https://mesocentre.pages.centralesupelec.fr/user_doc/)
  
