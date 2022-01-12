@@ -1,14 +1,14 @@
 import sys
 import dask
 import numpy as np
-import pandas as pd
 import dask.array as da
 from dask.distributed import Client, Event, get_client, comm, Queue, Future, Variable
+from dask.delayed import Delayed
 import time
 import asyncio
 import json
 import itertools
-from dask.delayed import Delayed
+
 
 class metadata:
     index = list()
@@ -79,6 +79,7 @@ class Adaptor :
             s = json.load(f)
         self.adr = s["address"]
         self.client  = Client(self.adr, serializers=['dask', 'pickle']) # msgpack pour grand message ne serialize pas
+        dask.config.set({"distributed.deploy.lost-worker-timeout": 60, "distributed.workers.memory.spill":0.97, "distributed.workers.memory.target":0.95, "distributed.workers.memory.terminate":0.99 })
         self.workers = [comm.get_address_host_port(i,strict=False) for i in self.client.scheduler_info()["workers"].keys()]
         while (len(self.workers)!= Sworker):
             self.workers = [comm.get_address_host_port(i,strict=False) for i in self.client.scheduler_info()["workers"].keys()]
@@ -97,6 +98,19 @@ class Adaptor :
         arrays = da.block(ll)
         return arrays
     
+    def create_array_list(self, name, shape, chunksize, dtype, timedim): #list arrays, one for each time step.
+        chunks_in_each_dim = [shape[i]//chunksize[i] for i in range(len(shape))]
+        l = list(itertools.product(*[range(i) for i in chunks_in_each_dim]))
+        items = []
+        for m in l:
+            f=Future(key=("deisa-"+name,m), inform=True, deisa=True)
+            d = da.from_delayed(dask.delayed(f), shape=chunksize, dtype=dtype)
+            items.append([list(m),d])
+        ll = self.array_sort(items)
+        for i in ll:
+            arrays.append(da.block(i))
+        return arrays
+    
     def array_sort(self, ListDs):
         if len(ListDs[0][0]) == 0:
             return ListDs[0][1]
@@ -106,11 +120,14 @@ class Adaptor :
                 dico.setdefault(e[0][0],[]).append([e[0][1:], e[1]])
             return [self.array_sort(dico[k]) for k in sorted(dico.keys())]
 
-    def get_data(self):
+    def get_data(self, as_list=False):
         arrays = dict()
         self.arrays_desc = Queue("Arrays").get()
         for name in self.arrays_desc:
-            arrays[name] = self.create_array(name,self.arrays_desc[name]["sizes"], self.arrays_desc[name]["subsizes"], self.arrays_desc[name]["dtype"], self.arrays_desc[name]["timedim"])
+            if not as_list:
+                arrays[name] = self.create_array(name,self.arrays_desc[name]["sizes"], self.arrays_desc[name]["subsizes"], self.arrays_desc[name]["dtype"], self.arrays_desc[name]["timedim"])
+            else: #TODO test this 
+                arrays[name] = self.create_array_list(name,self.arrays_desc[name]["sizes"], self.arrays_desc[name]["subsizes"], self.arrays_desc[name]["dtype"], self.arrays_desc[name]["timedim"])
         #Barrier after the creation of all the dask arrays 
         e = Event("Done")
         e.set()

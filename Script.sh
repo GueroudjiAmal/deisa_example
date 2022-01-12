@@ -12,7 +12,7 @@ NSIMU=$(($SLURM_NNODES - $NDASK)) # Number of nodes allocated for the simulation
 NWORKER=$(($NDASK - 1))           # Number of nodes allocated for the Dask Worker 
 NPROC=2                          # Total number of processes
 NPROCPNODE=2                     # Number of processes per node
-NWORKERPNODE=2                   # Number of Dask workers per node
+NWORKERPNODE=1                  # Number of Dask workers per node
 
 SCHEFILE=scheduler.json
 

@@ -15,15 +15,15 @@ spack load cmake@3.22.1
 spack load pdiplugin-deisa
 spack load pdiplugin-mpi
 
-NWORKER=4
+NWORKER=2
 
 PARALLELISM1=2
 PARALLELISM2=1
 
-DATASIZE1=66560
-DATASIZE2=61440
+DATASIZE1=100000
+DATASIZE2=80000
 
-GENERATION=10
+GENERATION=5
 
 mkdir -p $WORKDIR/Deisa
 WORKSPACE=$(mktemp -d -p $WORKDIR/Deisa/ Dask-run-XXX)

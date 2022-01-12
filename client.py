@@ -15,8 +15,6 @@ scheduler_info = 'scheduler.json'
 # Initialize the Deisa Adaptor 
 C = Initialization(Sworkers, scheduler_info)
 
-dask.config.set({"distributed.deploy.lost-worker-timeout": 60})
-
 # Check if client version is compatible with scheduler version
 C.client.get_versions(check=True)
 
