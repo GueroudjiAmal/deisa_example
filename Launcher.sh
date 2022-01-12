@@ -4,10 +4,11 @@ DIR=$PWD
 
 ### prescript.py  is used to create the configuration file that is shared betwwen the simulation and the Dask cluster
 # sys.argv[1] : global_size.height
-# sys.argv[2] : parallelism.height
-# sys.argv[3] : generation 
-# sys.argv[4] : gmax
-# sys.argv[5] : nworkers
+# sys.argv[2] : global_size.width
+# sys.argv[3] : parallelism.height
+# sys.argv[4] : parallelism.width
+# sys.argv[5] : generation 
+# sys.argv[6] : nworkers
 
 source $WORKDIR/spack/share/spack/setup-env.sh
 spack load cmake@3.22.1
@@ -19,14 +20,8 @@ NWORKER=4
 PARALLELISM1=2
 PARALLELISM2=1
 
-#DATASIZE1=133120
-#DATASIZE2=122880
-
-DATASIZE1=100000
-DATASIZE2=80000
-
-#DATASIZE1=66560
-#DATASIZE2=61440
+DATASIZE1=66560
+DATASIZE2=61440
 
 GENERATION=10
 

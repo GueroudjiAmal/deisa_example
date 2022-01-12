@@ -30,7 +30,7 @@ with performance_report(filename="dask-report.html"):
     #gt = gt.rechunk({1: 'auto', 2: 'auto'})
     print(gt.chunks)
     # Construct a lazy task graph 
-    cpt =  gt.mean() #(gt.sum() - gt.mean())*5.99 /
+    cpt = (gt.sum() - gt.mean())*5.99 /  gt.mean() 
     # Submit the task graph to the scheduler
     s = C.client.compute(cpt, release=True)
     # Print the result, note that "s" is a future object, to get the result of the computation, we call `s.result()` to retreive it.  
