@@ -13,13 +13,13 @@ with open(r'config.yml') as file:
 scheduler_info = 'scheduler.json'
 
 # Initialize the Deisa Adaptor 
-C = Initialization(Sworkers, scheduler_info)
+Adaptor = Initialization(Sworkers, scheduler_info)
 
 # Check if client version is compatible with scheduler version
-C.client.get_versions(check=True)
+Adaptor.client.get_versions(check=True)
 
 # Get data descriptor as a dict of Dask arrays
-arrays = C.get_data()
+arrays = Adaptor.get_data()
 
 # py-bokeh is needed if you wanna see the perf report 
 with performance_report(filename="dask-report.html"):
@@ -30,6 +30,6 @@ with performance_report(filename="dask-report.html"):
     # Construct a lazy task graph 
     cpt = (gt.sum() - gt.mean())*5.99 /  gt.mean() 
     # Submit the task graph to the scheduler
-    s = C.client.compute(cpt, release=True)
+    s = Adaptor.client.compute(cpt, release=True)
     # Print the result, note that "s" is a future object, to get the result of the computation, we call `s.result()` to retreive it.  
     print(s.result())

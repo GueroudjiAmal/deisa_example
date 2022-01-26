@@ -3,25 +3,27 @@
 #SBATCH -J dask-cluster
 #SBATCH -A dask_coupling
 #SBATCH --time=01:00:00
-#SBATCH --nodes=1
+#SBATCH --nodes=4
 #SBATCH --partition=cpu_med
 #SBATCH --exclusive
 
-
-NPROC=4                          # Total number of processes
-NPROCPNODE=4                     # Number of processes per node
-NWORKERPNODE=4                  # Number of Dask workers per node
+NDASK=3                           # Total number of nodes allocated for dask cluster
+NSIMU=$(($SLURM_NNODES - $NDASK)) # Number of nodes allocated for the simulation 
+NWORKER=$(($NDASK - 1))           # Number of nodes allocated for the Dask Worker 
+NPROC=2                          # Total number of processes
+NPROCPNODE=2                     # Number of processes per node
+NWORKERPNODE=1                  # Number of Dask workers per node
 
 SCHEFILE=scheduler.json
 
 source $WORKDIR/spack/share/spack/setup-env.sh
 spack load pdiplugin-deisa
-spack load /hbohtbo #pdiplugin-mpi
+spack load pdiplugin-mpi
 spack load py-bokeh 
 
 # Launch Dask Scheduler in a 1 Node and save the connection information in $SCHEFILE
 echo launching Scheduler 
-srun --cpu-bind=verbose --ntasks=1 --nodes=1 -l \
+srun --relative=0  --cpu-bind=verbose --ntasks=1 --nodes=1 -l \
     --output=scheduler.log \
     dask-scheduler \
     --interface ib0 \
@@ -40,7 +42,7 @@ client_pid=$!
 
 # Launch Dask workers in the rest of the allocated nodes 
 echo Scheduler booted, Client connected, launching workers 
-srun  --cpu-bind=verbose  -l \
+srun --relative=1  --nodes=$NWORKER  --cpu-bind=verbose  -l \
      --output=worker-%t.log \
      dask-worker \
      --interface ib0 \
@@ -50,7 +52,7 @@ srun  --cpu-bind=verbose  -l \
      
 # Launch the simulation code
 echo Running Simulation 
-pdirun srun  --ntasks=$NPROC --ntasks-per-node=$NPROCPNODE  -l ./simulation  &
+pdirun srun --relative=$NDASK --nodes=$NSIMU --ntasks=$NPROC --ntasks-per-node=$NPROCPNODE  -l ./simulation  &
 
 # Wait for the client process to be finished 
 wait $client_pid

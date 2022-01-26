@@ -13,22 +13,22 @@ DIR=$PWD
 source $WORKDIR/spack/share/spack/setup-env.sh
 spack load cmake@3.22.1
 spack load pdiplugin-deisa
-spack load /hbohtbo #pdiplugin-mpi
+spack load pdiplugin-mpi
 
-NWORKER=4
+NWORKER=2
 
 PARALLELISM1=2
-PARALLELISM2=2
+PARALLELISM2=1
 
-DATASIZE1=1024
-DATASIZE2=1024
+DATASIZE1=100000
+DATASIZE2=70000
 
 GENERATION=5
 
 mkdir -p $WORKDIR/Deisa
 WORKSPACE=$(mktemp -d -p $WORKDIR/Deisa/ Dask-run-XXX)
 cd $WORKSPACE
-cp $DIR/simulation.yml $DIR/*.py  $DIR/Script.sh $DIR/Launcher.sh  $DIR/*.c $DIR/CMakeLists.txt  .
+cp $DIR/simulation.yml $DIR/*.py  $DIR/Script.sh $DIR/Coupling.sh  $DIR/*.c $DIR/CMakeLists.txt  .
 pdirun cmake .
 make -B simulation
 echo Running $WORKSPACE 
