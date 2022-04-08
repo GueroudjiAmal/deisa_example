@@ -14,10 +14,10 @@ NWORKERPNODE=4                  # Number of Dask workers per node
 
 SCHEFILE=scheduler.json
 
-source $WORKDIR/spack/share/spack/setup-env.sh
-spack load pdiplugin-deisa
-spack load /hbohtbo #pdiplugin-mpi
-spack load py-bokeh 
+#source $WORKDIR/spack/share/spack/setup-env.sh
+#spack load pdiplugin-deisa
+#spack load /hbohtbo #pdiplugin-mpi
+#spack load py-bokeh 
 
 # Launch Dask Scheduler in a 1 Node and save the connection information in $SCHEFILE
 echo launching Scheduler 
@@ -35,7 +35,7 @@ done
 
 # Connect the client to the Dask scheduler
 echo Connect Master Client  
-`which python` client.py &
+`which python` Derivative.py &
 client_pid=$!
 
 # Launch Dask workers in the rest of the allocated nodes 

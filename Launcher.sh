@@ -10,11 +10,12 @@ DIR=$PWD
 # sys.argv[5] : generation 
 # sys.argv[6] : nworkers
 
+ml load gcc/9.2.0/gcc-4.8.5  openmpi/4.0.2/gcc-9.2.0 
 source $WORKDIR/spack/share/spack/setup-env.sh
-spack load cmake@3.22.1
+spack env activate deisa-ruche
+spack load cmake@3.22.2
 spack load pdiplugin-deisa
-spack load /hbohtbo #pdiplugin-mpi
-
+spack load pdiplugin-mpi
 NWORKER=4
 
 PARALLELISM1=2
